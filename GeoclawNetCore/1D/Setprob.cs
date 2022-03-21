@@ -13,8 +13,10 @@
         public static double xlower;
         public static double ndim;
         public static double bulk;
+        public static int inundation_method;
+        public static bool entropy_fix;
 
-        public static void Init(double[] rho, double rho_air, double dry_tolerance, int eigen_method, double xlower, double ndim, double bulk)
+        public static void Init(double[] rho, double rho_air, double dry_tolerance, int eigen_method, double xlower, double ndim, double bulk, int inundation_method, bool entropy_fix)
         {
             Setprob.rho = rho;
             Setprob.dry_tolerance = dry_tolerance;
@@ -27,7 +29,9 @@
             Setprob.xlower = xlower;
             Setprob.ndim = ndim;
             Setprob.bulk = bulk;
-        }
+            Setprob.inundation_method = inundation_method;
+            Setprob.entropy_fix = entropy_fix;
+    }
 
         public static double Wind_Drag(double wind_speed)
         {

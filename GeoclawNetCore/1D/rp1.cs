@@ -56,6 +56,7 @@ namespace GeoclawNetCore._1D
 
         private int info, rare, layer_index, mbc, meqn, mwaves, upperbound1;
         public int[] ipiv = new int[4];
+        public double[] alpha = new double[4];
         public double[] beta = new double[4];
         public double[] delta = new double[4];
         public double[][] A = new double[4][];
@@ -165,21 +166,21 @@ namespace GeoclawNetCore._1D
 
                 if (eigen_method == 1)
                 {
-                    var ret = Linear_Eigen(h_hat_l, h_hat_r, u_l, u_r, rare);
+                    var ret = Linear_Eigen(alpha, h_hat_l, h_hat_r, u_l, u_r, rare);
                     double[] lambda = ret.Item1;
                     eig_vec = ret.Item2;
                     s[i] = lambda;
                 }
                 else if (eigen_method == 2)
                 {
-                    var ret = Linear_Eigen(h_l, h_r, u_l, u_r, rare);
+                    var ret = Linear_Eigen(alpha, h_l, h_r, u_l, u_r, rare);
                     double[] lambda = ret.Item1;
                     eig_vec = ret.Item2;
                     s[i] = lambda;
                 }
                 else if (eigen_method == 3)
                 {
-                    var ret = Velocity_Eigen(h_l, h_r, u_l, u_r, rare);
+                    var ret = Velocity_Eigen(alpha, h_l, h_r, u_l, u_r, rare);
                     double[] lambda = ret.Item1;
                     eig_vec = ret.Item2;
                     s[i] = lambda;
@@ -188,14 +189,14 @@ namespace GeoclawNetCore._1D
                 {
                     if (dry_state_r[1] && (!dry_state_l[1]) || dry_state_l[1] && (!dry_state_r[1]))
                     {
-                        var ret = Linear_Eigen(h_l, h_r, u_l, u_r, rare);
+                        var ret = Linear_Eigen(alpha, h_l, h_r, u_l, u_r, rare);
                         double[] lambda = ret.Item1;
                         eig_vec = ret.Item2;
                         s[i] = lambda;
                     }
                     else
                     {
-                        var ret = Exact_Eigen(h_l, h_r, u_l, u_r, rare);
+                        var ret = Exact_Eigen(alpha, h_l, h_r, u_l, u_r, rare);
                         double[] lambda = ret.Item1;
                         eig_vec = ret.Item2;
                         s[i] = lambda;
@@ -314,7 +315,7 @@ namespace GeoclawNetCore._1D
             for (int i = 0; i < refArr.Length; i++) refArr[i] = value;
         }
 
-        private static (double[], double[][]) SingleLayerEigen(double[] h_l, double[] h_r, double[] u_l, double[] u_r, int mwaves = 4)
+        internal static (double[], double[][]) SingleLayerEigen(double[] h_l, double[] h_r, double[] u_l, double[] u_r, int mwaves = 4)
         {
             double[] s = new double[mwaves];
             double[][] eig_vec = new double[mwaves][];
@@ -333,11 +334,10 @@ namespace GeoclawNetCore._1D
             return (s, eig_vec);
         }
 
-        private static (double[], double[][]) Linear_Eigen(double[] h_l, double[] h_r, double[] u_l, double[] u_r, int rare, int mwaves = 4)
+        internal static (double[], double[][]) Linear_Eigen(double[] alpha, double[] h_l, double[] h_r, double[] u_l, double[] u_r, int rare, int mwaves = 4)
         {
 
             double[] s = new double[mwaves];
-            double[] alpha = new double[mwaves];
             double[][] eig_vec = new double[mwaves][];
             double r = Setprob.r;
             double g = Setprob.g;
@@ -396,15 +396,13 @@ namespace GeoclawNetCore._1D
             return (s, eig_vec);
         }
 
-        private static (double[], double[][]) Exact_Eigen(double[] h_l, double[] h_r, double[] u_l, double[] u_r, int rare, int mwaves = 4)
+        internal static (double[], double[][]) Exact_Eigen(double[] alpha, double[] h_l, double[] h_r, double[] u_l, double[] u_r, int rare, int mwaves = 4)
         {
-
             double[] s = new double[mwaves];
             double[] real_evalues = new double[mwaves];
             double[] imag_evalues = new double[mwaves];
             double[] h_ave = new double[2];
             double[] u_ave = new double[2];
-            double[] alpha = new double[mwaves];
             double[][] eig_vec = new double[mwaves][];
             double[][] A = new double[mwaves][];
             double r = Setprob.r;
@@ -432,11 +430,9 @@ namespace GeoclawNetCore._1D
             return (real_evalues, eig_vec);
         }
 
-        private static (double[], double[][]) Velocity_Eigen(double[] h_l, double[] h_r, double[] u_l, double[] u_r, int rare, int mwaves = 4)
+        internal static (double[], double[][]) Velocity_Eigen(double[] alpha, double[] h_l, double[] h_r, double[] u_l, double[] u_r, int rare, int mwaves = 4)
         {
-
             double[] s = new double[mwaves];
-            double[] alpha = new double[mwaves];
             double[][] eig_vec = new double[mwaves][];
             double r = Setprob.r;
             double g = Setprob.g;

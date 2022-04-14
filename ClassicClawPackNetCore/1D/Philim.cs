@@ -2,7 +2,7 @@
 
 namespace ClassicClawPackNetCore._1D
 {
-    internal class Philim
+    public class Philim
     {
         [Pure]
         public static double Run(double a, double b, int meth)

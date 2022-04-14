@@ -4,7 +4,23 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <PackageId>Clawpack.NET</PackageId>
+    <Company />
+    <Authors>Tosin Ogundare</Authors>
+    <Product>Clawpack.NET</Product>
+    <PackageProjectUrl>https://github.com/tosin-ogundare/ClawpackNetCore</PackageProjectUrl>
+    <PackageIcon>noun-music-4476975.png</PackageIcon>
+    <RepositoryUrl>https://github.com/tosin-ogundare/ClawpackNetCore</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>Riemann Solver, Hyperbolic PDE</PackageTags>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\..\Users\Kay\Downloads\noun-music-4476975.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="2021.3.0" />

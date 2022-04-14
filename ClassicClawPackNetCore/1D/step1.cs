@@ -10,7 +10,7 @@ namespace ClassicClawPackNetCore._1D
     /// <summary>
     ///     Take one time step, updating q.
     /// </summary>
-    internal class Step1
+    public class Step1
     {
 
         public Step1(int num_waves, int num_ghost, int num_eqn, int num_aux, int mx, int dt, int dx, bool use_fwave)

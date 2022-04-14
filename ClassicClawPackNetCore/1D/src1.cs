@@ -7,7 +7,7 @@ using static GeoclawNetCore._1D.Setprob;
 
 namespace ClassicClawPackNetCore._1D
 {
-    internal class Src1
+    public class Src1
     {
         public Src1(int mx, int mbc, double dx, double dt, double[][] q)
         {

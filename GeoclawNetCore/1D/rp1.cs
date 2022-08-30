@@ -41,7 +41,7 @@ namespace GeoclawNetCore._1D
             for (int i = 0; i < s.Length; i++) s[i] = new double[mwaves];
             for (int i = 0; i < eig_vec.Length; i++) eig_vec[i] = new double[mwaves];
             for (int i = 0; i < fwave.Length; i++) fwave[i] = new double[meqn][];
-            for (int i = 0; i < fwave.Length; i++) for (int j = 0; j < fwave[i].Length; i++) fwave[i][j] = new double[mwaves];
+            for (int i = 0; i < fwave.Length; i++) for (int j = 0; j < fwave[i].Length; j++) fwave[i][j] = new double[mwaves];
         }
 
         public double[][][] fwave;

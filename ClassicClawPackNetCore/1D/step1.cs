@@ -8,7 +8,7 @@ namespace ClassicClawPackNetCore._1D
     public class Step1
     {
 
-        public Step1(int num_waves, int num_ghost, int num_eqn, int num_aux, int mx, int dt, int dx, bool use_fwave)
+        public Step1(int num_waves, int num_ghost, int num_eqn, int num_aux, int mx, double dt, double dx, bool use_fwave)
         {
             this.num_waves = num_waves;
             this.num_ghost = num_ghost;
@@ -34,10 +34,11 @@ namespace ClassicClawPackNetCore._1D
             for (int i = 0; i < aux.Length; i++) aux[i] = new double[mx + 2 * num_ghost];
             for (int i = 0; i < q.Length; i++) q[i] = new double[mx + 2 * num_ghost];
             for (int i = 0; i < wave.Length; i++) wave[i] = new double[num_waves][];
-            for (int i = 0; i < wave.Length; i++) for (int j = 0; j < wave[i].Length; i++) wave[i][j] = new double[mx + 2 * num_ghost];
+            for (int i = 0; i < wave.Length; i++) for (int j = 0; j < wave[i].Length; j++) wave[i][j] = new double[mx + 2 * num_ghost];
         }
 
-        int num_waves, num_ghost, mx, dt, dx, num_eqn;
+        int num_waves, num_ghost, mx, num_eqn;
+        double dt, dx;
         public double[][] q;
         public double[][] aux;
         public double[][] f;

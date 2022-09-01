@@ -1,9 +1,4 @@
 ﻿using GeoclawNetCore._1D;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ClassicClawPackNetCore._1D
 {
@@ -29,7 +24,7 @@ namespace ClassicClawPackNetCore._1D
             wave = new double[num_eqn][][];
             amdq = new double[num_eqn][];
             apdq = new double[num_eqn][];
-            dtdx = new double[mx + 2*num_ghost];
+            dtdx = new double[mx + 2 * num_ghost];
             method = new int[7];
             mthlim = new int[num_waves];
             for (int i = 0; i < amdq.Length; i++) amdq[i] = new double[num_eqn];
@@ -84,7 +79,7 @@ namespace ClassicClawPackNetCore._1D
 
 
             int index_capa = method[5];
-            for (int i = 0; i < (mx + 2 * num_ghost); i++) 
+            for (int i = 0; i < (mx + 2 * num_ghost); i++)
             {
                 if (index_capa > 0)
                 {
@@ -99,7 +94,7 @@ namespace ClassicClawPackNetCore._1D
             }
 
             // solve Riemann problem at each interface
-             var rpi = new Rp1(ql: q, qr: q, auxl: aux, auxr: aux, mx: mx, maxmx: mx );
+            var rpi = new Rp1(ql: q, qr: q, auxl: aux, auxr: aux, mx: mx, maxmx: mx);
             s = rpi.s;
             amdq = rpi.amdq;
             apdq = rpi.apdq;
@@ -109,16 +104,16 @@ namespace ClassicClawPackNetCore._1D
             // for equations not in conservation form.  It is conservative if
             // amdq + apdq = f(q(i)) - f(q(i-1)).
 
-            for(int i = 0; i < mx + 1; i++)
+            for (int i = 0; i < mx + 1; i++)
             {
                 // q(:, i - 1) is still in cache from last cycle of i loop, so
                 // update it first
-                for (int m = 0; m < num_eqn; m++) 
-                { 
+                for (int m = 0; m < num_eqn; m++)
+                {
                     q[m][i - 1] = q[m][i - 1] - dtdx[i - 1] * amdq[m][i];
                     q[m][i] = q[m][i] - dtdx[i] * apdq[m][i];
                 }
-                 
+
 
             }
 
@@ -135,7 +130,7 @@ namespace ClassicClawPackNetCore._1D
             // compute correction fluxes for second order q_{xx} terms:/
             // apply limiter to waves:
             var limiter = new Limiter(maxm: mx, num_eqn, num_waves, num_ghost, mx);
-            if (limit) 
+            if (limit)
             {
                 limiter.Run();
                 wave = limiter.wave;
@@ -155,7 +150,7 @@ namespace ClassicClawPackNetCore._1D
                     for (int mw = 0; mw < num_waves; mw++)
                         for (int m = 0; m < num_eqn; m++)
                             f[m][i] = f[m][i] + 0.50 * Math.Abs(s[mw][i]) * (1.0 - Math.Abs(s[mw][i]) * dtdxave) * wave[m][mw][i];
-                } 
+                }
             }
             else
                 for (int i = 1; i <= mx + 1; i++)

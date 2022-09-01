@@ -15,9 +15,9 @@ namespace ClassicClawPackNetCore._1D
                 default: ret = r; break;
                 case 1:
                     ret = Math.Max(0.0, Math.Min(1.0, r)); break;
-                case 2: 
+                case 2:
                     ret = Math.Max(0.0, Math.Max(Math.Min(1.0, 2.0 * r), Math.Min(2.0, r))); break;
-                case 3: 
+                case 3:
                     ret = (r + Math.Abs(r)) / (1.0 + Math.Abs(r)); break;
                 case 4:
                     double c = (1.0 + r) / 2.0;

@@ -16,7 +16,23 @@
         public static int inundation_method;
         public static bool entropy_fix;
 
-        public static void Init(double[] rho, double rho_air, double dry_tolerance, int eigen_method, double xlower, double ndim, double bulk, int inundation_method, bool entropy_fix)
+        public static void Init()
+        {
+            rho = datafile.rho;
+            dry_tolerance = datafile.dry_tolerance;
+            PI = 3.141592654;
+            g = 9.8;
+            r = rho[0] / rho[1];
+            one_minus_r = 1.0 - r;
+            eigen_method = datafile.eigen_method;
+            rho_air = datafile.rho_air;
+            xlower = 0;
+            ndim = 2;
+            bulk = datafile.bulk;
+            inundation_method = datafile.inundation_method;
+            entropy_fix = datafile.entropy_fix;
+        }
+            public static void Init(double[] rho, double rho_air, double dry_tolerance, int eigen_method, double xlower, double ndim, double bulk, int inundation_method, bool entropy_fix)
         {
             Setprob.rho = rho;
             Setprob.dry_tolerance = dry_tolerance;

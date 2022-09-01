@@ -58,25 +58,30 @@
             };
         }
 
-        private static readonly Action<int, int, double[][]> ZeroOrderExtrapolation = (mbc, meqn, q) => {
+        private static readonly Action<int, int, double[][]> ZeroOrderExtrapolation = (mbc, meqn, q) =>
+        {
             for (int ibc = 0; ibc < mbc; ibc++) for (int m = 0; m < meqn; m++) q[m][1 - ibc] = q[m][2];
         };
 
-        private static readonly Action<int, int, int, double[][]> ZeroOrderExtrapolationSec = (mbc, meqn, mx, q) => {
+        private static readonly Action<int, int, int, double[][]> ZeroOrderExtrapolationSec = (mbc, meqn, mx, q) =>
+        {
             for (int ibc = 0; ibc < mbc; ibc++) for (int m = 0; m < meqn; m++) q[m][mx + ibc] = q[m][mx];
         };
 
         private static Action InvalidCase = () => throw new InvalidOperationException("*** ERROR *** mthbc(1)=0 || 1 and no BCs specified in bc1 or bc2");
 
-        private static readonly Action<int, int, int, double[][]> Periodic = (mbc, meqn, mx, q) => {
-            for (int ibc = 0; ibc < mbc; ibc++) for (int m = 0; m < meqn; m++) q[m][1 - ibc] = q[m][mx+1-ibc];
+        private static readonly Action<int, int, int, double[][]> Periodic = (mbc, meqn, mx, q) =>
+        {
+            for (int ibc = 0; ibc < mbc; ibc++) for (int m = 0; m < meqn; m++) q[m][1 - ibc] = q[m][mx + 1 - ibc];
         };
 
-        private static readonly Action<int, int, int, double[][]> PeriodicSec = (mbc, meqn, mx, q) => {
+        private static readonly Action<int, int, int, double[][]> PeriodicSec = (mbc, meqn, mx, q) =>
+        {
             for (int ibc = 0; ibc < mbc; ibc++) for (int m = 0; m < meqn; m++) q[m][mx + ibc] = q[m][ibc];
         };
 
-        private static readonly Action<int, int, double[][]> SolidWall = (mbc, meqn, q) => {
+        private static readonly Action<int, int, double[][]> SolidWall = (mbc, meqn, q) =>
+        {
             for (int ibc = 0; ibc < mbc; ibc++)
             {
                 for (int m = 0; m < meqn; m++) q[m][1 - ibc] = q[m][ibc];
@@ -84,10 +89,11 @@
             }
         };
 
-        private static readonly Action<int, int, int, double[][]> SolidWallSec = (mbc, meqn, mx,  q) => {
+        private static readonly Action<int, int, int, double[][]> SolidWallSec = (mbc, meqn, mx, q) =>
+        {
             for (int ibc = 0; ibc < mbc; ibc++)
             {
-                for (int m = 0; m < meqn; m++) q[m][mx + ibc] = q[m][mx+1-ibc];
+                for (int m = 0; m < meqn; m++) q[m][mx + ibc] = q[m][mx + 1 - ibc];
                 q[1][mx + ibc] = -q[2][mx + 1 - ibc];
             }
         };

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static GeoclawNetCore._1D.Setprob;
+﻿using static GeoclawNetCore._1D.Setprob;
 
 namespace ClassicClawPackNetCore._1D
 {
@@ -29,12 +24,11 @@ namespace ClassicClawPackNetCore._1D
         /// </remarks>
         public void Run()
         {
-            for(int i = 0; i < mx + mbc; i++)
+            for (int i = 0; i < mx + mbc; i++)
             {
                 var xcell = xlower + (i - 0.50) * dx;
                 q[0][i] = q[0][i] - dt * (ndim - 1) * bulk / xcell * q[1][i];
             }
-         
         }
     }
 }

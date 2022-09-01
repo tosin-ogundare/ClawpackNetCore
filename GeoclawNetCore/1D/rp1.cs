@@ -10,17 +10,39 @@ namespace GeoclawNetCore._1D
     {
 
         /// <summary>
-        /// 
+        ///     Class constructor.
         /// </summary>
-        /// <param name="maxmx"></param>
-        /// <param name="meqn"></param>
-        /// <param name="mwaves"></param>
-        /// <param name="mbc"></param>
-        /// <param name="mx"></param>
-        /// <param name="ql"></param>
-        /// <param name="qr"></param>
-        /// <param name="auxl"></param>
-        /// <param name="auxr"></param>
+        /// <param name="maxmx"> 
+        ///     Maximum number of grid cells in the x-direction
+        /// </param>
+        /// <param name="meqn">
+        ///     meqn is the number of equations in the system of conservation laws.
+        /// </param>
+        /// <param name="mwaves"> 
+        ///     mwaves is the number of waves that result from the
+        ///     solution of each Riemann problem.Often mwaves = meqn but
+        ///     for some problems these may be different.
+        /// </param>
+        /// <param name="mbc">
+        /// mbc is the number of "ghost cells" that must be added on to each
+        /// side of the domain to handle boundary conditions.The cells
+        /// actually in the physical domain are labelled from 1 to mx in x.
+        /// The arrays are dimensioned actually indexed from 1-mbc to mx+mbc.
+        /// For the methods currently implemented, mbc = 2 should be used.
+        /// If the user implements another method that has a larger stencil and
+        ///       hence requires more ghost cells, a larger value of mbc could be used.
+        ///       q is extended from the physical domain to the ghost cells by the
+        ///       user-supplied routine bc1.
+        /// </param>
+        /// <param name="mx">
+        /// mx is the number of grid cells in the x-direction, in the
+        /// physical domain.In addition there are mbc grid cells
+        /// along each edge of the grid that are used for boundary conditions
+        /// </param>
+        /// <param name="ql">initial data left part</param>
+        /// <param name="qr">initial data right part</param>
+        /// <param name="auxl">Array of auxiliary variables that are used in specifying the left part of the problem.</param>
+        /// <param name="auxr">Array of auxiliary variables that are used in specifying the right part of the problem.</param>
         public Rp1(double[][] ql, double[][] qr, double[][] auxl, double[][] auxr, int mx, int maxmx, int meqn = 4, int mwaves = 4, int mbc = 2)
         {
             fwave = new double[maxmx + 2 * mbc][][];
@@ -41,7 +63,7 @@ namespace GeoclawNetCore._1D
             for (int i = 0; i < s.Length; i++) s[i] = new double[mwaves];
             for (int i = 0; i < eig_vec.Length; i++) eig_vec[i] = new double[mwaves];
             for (int i = 0; i < fwave.Length; i++) fwave[i] = new double[meqn][];
-            for (int i = 0; i < fwave.Length; i++) for (int j = 0; j < fwave[i].Length; i++) fwave[i][j] = new double[mwaves];
+            for (int i = 0; i < fwave.Length; i++) for (int j = 0; j < fwave[i].Length; j++) fwave[i][j] = new double[mwaves];
         }
 
         public double[][][] fwave;

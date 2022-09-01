@@ -6,7 +6,7 @@
     public class Limiter
     {
 
-        public Limiter(int maxm,int num_eqn, int num_waves, int num_ghost, int mx)
+        public Limiter(int maxm, int num_eqn, int num_waves, int num_ghost, int mx)
         {
             this.mx = mx;
             this.num_waves = num_waves;
@@ -16,7 +16,7 @@
             mthlim = new int[num_waves];
             dotr = new double[num_waves];
             for (int i = 0; i < wave.Length; i++) wave[i] = new double[num_waves][];
-            for (int i = 0; i < wave.Length; i++) for (int j = 0; j < wave[i].Length; i++) wave[i][j] = new double[maxm+2*num_ghost];
+            for (int i = 0; i < wave.Length; i++) for (int j = 0; j < wave[i].Length; i++) wave[i][j] = new double[maxm + 2 * num_ghost];
         }
 
         int mx, num_waves, num_eqn;
@@ -47,8 +47,8 @@
             SetAll(dotr, 0.0);
             for (int i = 0; i <= mx + 1; i++)
             {
-                Waveloop:
-                for(int mw = 0; i < num_waves; num_waves++)
+            Waveloop:
+                for (int mw = 0; i < num_waves; num_waves++)
                 {
                     if (mthlim[mw] == 0) goto Waveloop;
 
@@ -63,8 +63,8 @@
 
                     }
 
-                     // Skip this loop if it's on the boundary or the size of the wave is
-                     // zero(but still want dot products to be initialized above)
+                    // Skip this loop if it's on the boundary or the size of the wave is
+                    // zero(but still want dot products to be initialized above)
                     if (i == 0) goto Waveloop;
                     if (wnorm2 == 0.0) goto Waveloop;
 

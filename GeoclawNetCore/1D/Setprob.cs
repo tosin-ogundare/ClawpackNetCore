@@ -32,7 +32,7 @@
             inundation_method = datafile.inundation_method;
             entropy_fix = datafile.entropy_fix;
         }
-            public static void Init(double[] rho, double rho_air, double dry_tolerance, int eigen_method, double xlower, double ndim, double bulk, int inundation_method, bool entropy_fix)
+        public static void Init(double[] rho, double rho_air, double dry_tolerance, int eigen_method, double xlower, double ndim, double bulk, int inundation_method, bool entropy_fix)
         {
             Setprob.rho = rho;
             Setprob.dry_tolerance = dry_tolerance;

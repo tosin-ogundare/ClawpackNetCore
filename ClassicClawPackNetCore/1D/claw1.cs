@@ -182,9 +182,9 @@
         /// stored in aux(mcapa, i).
         /// In this case we require method(7).ge.mcapa.
         /// </remarks>
-        public claw1(int meqn, int mwaves, int maux, int mbc, int mx,
+        public claw1(int meqn, int mwaves, int maux, int mbc, int mx, int maxmx,
                     double xlower, double dx, double tstart, double tend,
-                    double[] mthbc, double[] work, int mwork,int[] mthlim,
+                    int[] mthbc, double[] work, int mwork,int[] mthlim,
                     double[] dtv, double [] cflv, int[] nv, int[] method, bool use_fwave = true
                     )
         {
@@ -192,8 +192,12 @@
             this.mbc = mbc;
             this.mx = mx;
             this.meqn = meqn;
+            this.mwaves = mwaves;
+            this.maux = maux;
+            this.maxmx = maxmx;
             q = new double[meqn][];
             aux = new double[maux][];
+            this.xlower = xlower;
             this.dx = dx;
             this.tstart = tstart;
             this.tend = tend;
@@ -209,6 +213,7 @@
             dtdx = new double[maxmx + 2 * mbc];
             method = new int[7];
             mthlim = new int[mwaves];
+            this.mthbc = mthbc;
             for (int i = 0; i < amdq.Length; i++) amdq[i] = new double[maxmx + 2 * mbc];
             for (int i = 0; i < apdq.Length; i++) apdq[i] = new double[maxmx + 2 * mbc];
             for (int i = 0; i < s.Length; i++) s[i] = new double[maxmx + 2 * mbc];
@@ -219,12 +224,12 @@
             for (int i = 0; i < wave.Length; i++) for (int j = 0; j < wave[i].Length; j++) wave[i][j] = new double[maxmx + 2 * mbc];
             for (int i = 0; i < qwork.Length; i++) qwork[i] = new double[maxmx + 2 * mbc];
 
-            dtv = new double[5]; // dimension dtv(5)
-            cflv = new double[4]; // dimension cflv(4)
+            this.dtv = dtv; // dimension dtv(5)
+            this.cflv = cflv; // dimension cflv(4)
 
-            mthlim = new int[mwaves]; // dimension mthlim(mwaves)
-            method = new int[7]; // dimension method(7)
-            nv = new int[2]; // dimension nv(2)
+            this.mthlim = mthlim; // dimension mthlim(mwaves)
+            this.method = method; // dimension method(7)
+            this.nv = nv; // dimension nv(2)
         }
 
         int maxmx, meqn, mwaves, mbc, maux, mx, mwork;
@@ -248,8 +253,8 @@
         // bcR: boundary cells at the other end of pipe(right boundary)
         public double[][] bcL;
         public double[][] bcR;
-
-
+        public int[] mthbc;
+        public double cfl, xlower;
         public int Run()
         {
             var runMainLoop = true;
@@ -257,13 +262,13 @@
             var t = tstart;
             var maxn = nv[0];
             var dt = dtv[0]; //# initial dt
-            var cflmax = 0.0F;
+            double cflmax = 0.0;
             var dtmin = dt;
             var dtmax = dt;
             nv[1] = 0;
 
             //     # partition work array into pieces for passing into step1:
-            var i0f = 0; //var i0f = 1; changed to 0 since C3 array index starts from 0
+            var i0f = 0; 
             var i0wave = i0f + (maxmx + 2 * mbc) * meqn;
             var i0s = i0wave + (maxmx + 2 * mbc) * meqn * mwaves;
             var i0dtdx = i0s + (maxmx + 2 * mbc) * mwaves;
@@ -279,18 +284,12 @@
             {
                 runMainLoop = false;
             }
-            else
-            {
-                if (mwork < i0end)
-                {
-                    errorInfo = 4;
-                    runMainLoop = false;
-                }
-            }
-
+            if (mwork < i0end) errorInfo = 4;
+            miranda:
             if (runMainLoop && maxn != 0)
             {
                 copyq1 cp1 = new copyq1();
+
                 for (int n = 0; n < maxn; n++)
                 {
                     //time at beginning of time step.
@@ -299,63 +298,68 @@
                     var told = t; 
                     if (told + dt > tend && tstart < tend) dt = tend - told;
 
-                    if (method[0] == 1)
-                    {
-                        //save old q in case we need to retake step with smaller dt:
-                        cp1.Run(ref q, ref qwork);
-                        //copyq1(maxmx, meqn, mbc, mx, q, work(i0qwork));
-                    }
+                    // Save copies of q and qwork
+                    if (method[0] == 1) cp1.Run(ref q, ref qwork);
 
                     // midpoint in time for Strang splitting
                     var dt2 = dt / 2.0F;
                     var thalf = t + dt2;
                     t = told + dt; 
 
-                    // extend data from grid to bordering boundary cells:               
-                    var bc1 = new bc1(maux, new int[] { 1, 2 }, mx, meqn, mbc); // bc1(maxmx, meqn, mbc, maux, mx, x, q, aux, t, dx)
-                    bc1.q = q;
-                    bc1.aux = aux;
+                    // extend data from grid to bordering boundary cells:
+                    var bc1 = new bc1(q, aux, mthbc, mx, meqn, mbc);
                     bc1.Run();
 
-                    if (method[4] == 1)
+                    if (method[4] == 2)
                     {
                         //with source term:   use Strang splitting
-                        Src1 src1 = new Src1(mx, mbc, dx, dt, q);
+                        Src1 src1 = new Src1(mx, mbc, dx, dt, q, xlower);
                         src1.Run();
                     }
 
                     Step1 step1 = new Step1(mwaves, mbc, meqn, maux, mx, (int)dt, (int)dx, true);
-
-                    // passed following parameter
-                    // maxmx, cfl, &rp1
-                    //remaining paramter
-                    step1.q = q;
-                    step1.aux = aux;
-                    step1.method = method;
-                    step1.mthlim = mthlim;
-                    step1.f = f;
-                    step1.wave = wave;
-                    step1.s = s;
-                    step1.amdq = amdq;
-                    step1.apdq = apdq;
-                    step1.dtdx = dtdx;
+                    cfl = step1.cfl;
                     step1.Run();
+                    q = step1.q;
+                    aux = step1.aux;
+                    f = step1.f;
+                    s = step1.s;
+                    wave = step1.wave;
+                    amdq = step1.amdq;
+                    apdq = step1.apdq;
+                    dtdx = step1.dtdx;
+                    method = step1.method;
+                    mthlim = step1.mthlim;
 
-                    if (method[4] == 1)
+                    if (method[4] == 2 || method[4] == 1)
                     {
-                        Src1 src1 = new Src1(mx, mbc, dx, dt, q);
+                        Src1 src1 = new Src1(mx, mbc, dx, dt, q, xlower);
+                        q = src1.q;
                         src1.Run();
                     }
 
-                    for (int ieqn = 0; ieqn < meqn; ieqn++)
+                    if (method[0] == 1 && cfl > 0)
                     {
-                        // first two and last two elements
-                        // in fortran code it was updating -1,0 and mx + 1 and mx + 2
-                        // this transform in C# 1, 0 and (mx + mbc) + 1 and (mx + mbc) + 2
-                        for (int ibc = 1; ibc <= mbc; ibc++)
+                        dt = Math.Min(dtv[1], (dt * cflv[1] / cfl));
+                        dtmin = Math.Min(dt, dtmin);
+                        dtmax = Math.Max(dt, dtmax);
+                    }
+                    else dt = dtv[1];
+
+                    if(cfl < cflv[0]) cflmax = Math.Max(cfl, cflmax);
+                    else
+                    {
+                        t = told;
+                        cp1.Run(ref qwork, ref q);
+
+                        if (method[0] == 1)
                         {
-                            q[ieqn][2 - ibc] = bcL[ieqn][ibc - 1];
-                            q[ieqn][mx + mbc + ibc] = bcR[ieqn][ibc - 1];
+                            dt = dt / 2;
+                            goto miranda;
+                        }
+                        else
+                        {
+                            cflmax = Math.Max(cfl, cflmax);
                         }
                     }
                 }
@@ -365,7 +369,7 @@
             if (method[0] == 0 && cflmax > cflv[0]) errorInfo = 12; //Courant number too large with fixed dt
             tend = t;
             cflv[2] = cflmax;
-            cflv[3] = 0;//cfl;
+            cflv[3] = cfl;
             dtv[2] = dtmin;
             dtv[3] = dtmax;
             dtv[4] = dt;

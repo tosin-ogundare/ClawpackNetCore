@@ -4,18 +4,20 @@ namespace ClassicClawPackNetCore._1D
 {
     public class Src1
     {
-        public Src1(int mx, int mbc, double dx, double dt, double[][] q)
+        public Src1(int mx, int mbc, double dx, double dt, double[][] q, double xlower_local)
         {
             this.mx = mx;
             this.mbc = mbc;
             this.dx = dx;
+            this.dt = dt;
             this.q = q;
+            this.xlower_local = xlower_local == 0 ? xlower: xlower_local;
         }
 
         int mx, mbc;
         double dx, dt;
-        double[][] q;
-
+        public double[][] q;
+        double xlower_local;
         ///<remarks>
         ///     source terms for radial symmetry
         ///     ndim should be set in setprob.f
@@ -26,7 +28,7 @@ namespace ClassicClawPackNetCore._1D
         {
             for (int i = 0; i < mx + mbc; i++)
             {
-                var xcell = xlower + (i - 0.50) * dx;
+                var xcell = xlower_local + (i - 0.50) * dx;
                 q[0][i] = q[0][i] - dt * (ndim - 1) * bulk / xcell * q[1][i];
             }
         }

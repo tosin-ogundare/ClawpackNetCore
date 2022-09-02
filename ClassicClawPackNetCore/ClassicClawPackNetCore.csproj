@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
@@ -13,7 +13,24 @@
     <RepositoryUrl>https://github.com/tosin-ogundare/ClawpackNetCore</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>Riemann Solver, Hyperbolic PDE</PackageTags>
+    <ApplicationIcon>1D\noun-musik.ico</ApplicationIcon>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <FileVersion>1.1.0.0</FileVersion>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+    <Version>1.1.0</Version>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="1D\noun-musik.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\..\Users\Z004J13E\Downloads\noun-music-4476975.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="2021.3.0" />
@@ -21,6 +38,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GeoclawNetCore\GeoclawNetCore.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="1D\noun-music-4476975.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>

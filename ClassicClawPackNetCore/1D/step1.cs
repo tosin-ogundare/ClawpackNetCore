@@ -50,7 +50,7 @@ namespace ClassicClawPackNetCore._1D
         public int[] method;
         public int[] mthlim;
         public bool use_fwave, limit;
-
+        public double cfl;
         ///<remarks>
         ///     method(1) = 1   ==>  Godunov method
         ///     method(1) = 2   ==>  Slope limiter method
@@ -119,7 +119,7 @@ namespace ClassicClawPackNetCore._1D
             }
 
             // compute maximum wave speed:
-            double cfl = 0.0;
+            cfl = 0.0;
             for (int i = 1; i <= mx + 1; i++)
                 for (int mw = 0; mw < num_waves; mw++)
                     // if s>0 use dtdx(i) to compute CFL,

@@ -5,12 +5,10 @@
     /// </summary>
     public class bc1
     {
-        public bc1(int maux, int[] mthbc, int mx = 4, int meqn = 4, int mbc = 2)
+        public bc1(double[][] q, double[][] aux, int[] mthbc, int mx = 4, int meqn = 4, int mbc = 2)
         {
-            q = new double[meqn][];
-            aux = new double[maux][];
-            for (int i = 0; i < meqn; i++) q[i] = new double[mx + 2 * mbc];
-            for (int i = 0; i < maux; i++) aux[i] = new double[mx + 2 * mbc];
+            this.q = q;
+            this.aux = aux;
             this.mthbc = mthbc;
             this.mbc = mbc;
             this.mx = mx;

@@ -184,11 +184,11 @@
         /// </remarks>
         public claw1(int meqn, int mwaves, int maux, int mbc, int mx, int maxmx,
                     double xlower, double dx, double tstart, double tend,
-                    int[] mthbc, double[] work, int mwork,int[] mthlim,
-                    double[] dtv, double [] cflv, int[] nv, int[] method, bool use_fwave = true
+                    int[] mthbc, double[] work, int mwork, int[] mthlim,
+                    double[] dtv, double[] cflv, int[] nv, int[] method, bool use_fwave = true
                     )
         {
-            this.mthlim = mthlim;
+            //this.mthlim = mthlim; // commenting this code since values come from constructor
             this.mbc = mbc;
             this.mx = mx;
             this.meqn = meqn;
@@ -211,8 +211,8 @@
             amdq = new double[meqn][];
             apdq = new double[meqn][];
             dtdx = new double[maxmx + 2 * mbc];
-            method = new int[7];
-            mthlim = new int[mwaves];
+            //method = new int[7]; // commenting this code since values come from constructor
+            //mthlim = new int[mwaves];// commenting this code since values come from constructor
             this.mthbc = mthbc;
             for (int i = 0; i < amdq.Length; i++) amdq[i] = new double[maxmx + 2 * mbc];
             for (int i = 0; i < apdq.Length; i++) apdq[i] = new double[maxmx + 2 * mbc];
@@ -257,6 +257,8 @@
         public double cfl, xlower;
         public int Run()
         {
+            var step1time = DateTime.Now;
+
             var runMainLoop = true;
             var errorInfo = 0;
             var t = tstart;
@@ -267,8 +269,15 @@
             var dtmax = dt;
             nv[1] = 0;
 
+            // ######################################################
+            // Actually following variables are no use since
+            // we are not using them in C# conversion code
+            // Fortran was using them to generate the s, fwave, amdq, apdq, dtdx
+            // in C# we are using local variables for these
+            // ######################################################
+
             //     # partition work array into pieces for passing into step1:
-            var i0f = 0; 
+            var i0f = 0; // in C# index starts from 0
             var i0wave = i0f + (maxmx + 2 * mbc) * meqn;
             var i0s = i0wave + (maxmx + 2 * mbc) * meqn * mwaves;
             var i0dtdx = i0s + (maxmx + 2 * mbc) * mwaves;
@@ -276,7 +285,7 @@
             var i0amdq = i0qwork + (maxmx + 2 * mbc) * meqn;
             var i0apdq = i0amdq + (maxmx + 2 * mbc) * meqn;
             i0dtdx = i0apdq + (maxmx + 2 * mbc) * meqn;
-            var i0end = i0dtdx + (maxmx + 2 * mbc) - 1;
+            var i0end = i0dtdx + (maxmx + 2 * mbc);
 
             // check for errors in data:
             errorInfo = CalculateStepAndCheckforErrors(ref maxn, dt, tstart, tend);
@@ -284,27 +293,34 @@
             {
                 runMainLoop = false;
             }
-            if (mwork < i0end) errorInfo = 4;
-            miranda:
+
+            // we may discard this condition in future since we are not actually using i0end variable anywhere in C# code
+            if (mwork < i0end)
+            {
+                errorInfo = 4;
+                runMainLoop = false;
+            }
+
+            copyq1 cp1 = new copyq1();
+
             if (runMainLoop && maxn != 0)
             {
-                copyq1 cp1 = new copyq1();
-
                 for (int n = 0; n < maxn; n++)
                 {
                     //time at beginning of time step.
                     //adjust dt to hit tend exactly if we're near end of computation
                     //(unless tend < tstart, which is a flag to take only a single step)
-                    var told = t; 
+                    var told = t;
                     if (told + dt > tend && tstart < tend) dt = tend - told;
 
                     // Save copies of q and qwork
                     if (method[0] == 1) cp1.Run(ref q, ref qwork);
 
+                    Label40:
                     // midpoint in time for Strang splitting
                     var dt2 = dt / 2.0F;
                     var thalf = t + dt2;
-                    t = told + dt; 
+                    t = told + dt;
 
                     // extend data from grid to bordering boundary cells:
                     var bc1 = new bc1(q, aux, mthbc, mx, meqn, mbc);
@@ -317,54 +333,83 @@
                         src1.Run();
                     }
 
-                    Step1 step1 = new Step1(mwaves, mbc, meqn, maux, mx, (int)dt, (int)dx, true);
-                    cfl = step1.cfl;
+                    //step1time = DateTime.Now;
+                    Step1 step1 = new Step1(mwaves, mbc, meqn, maux, mx, dt, dx, true);
+                    step1.q = q;// this always pass by reference
+                    step1.aux = aux; // this always pass by reference
+                    step1.method = method;// this always pass by reference
+                    step1.mthlim = mthlim;  // this always pass by reference
                     step1.Run();
-                    q = step1.q;
-                    aux = step1.aux;
+
+                    //Console.WriteLine($"step1 Execution time : {(DateTime.Now - step1time).Milliseconds}");
+
+                    cfl = step1.cfl;
+                    //q = step1.q;
+                    //aux = step1.aux;
+                    //method = step1.method;
+                    //mthlim = step1.mthlim;
                     f = step1.f;
                     s = step1.s;
                     wave = step1.wave;
                     amdq = step1.amdq;
                     apdq = step1.apdq;
                     dtdx = step1.dtdx;
-                    method = step1.method;
-                    mthlim = step1.mthlim;
+
 
                     if (method[4] == 2 || method[4] == 1)
                     {
                         Src1 src1 = new Src1(mx, mbc, dx, dt, q, xlower);
-                        q = src1.q;
                         src1.Run();
                     }
 
-                    if (method[0] == 1 && cfl > 0)
-                    {
-                        dt = Math.Min(dtv[1], (dt * cflv[1] / cfl));
-                        dtmin = Math.Min(dt, dtmin);
-                        dtmax = Math.Max(dt, dtmax);
-                    }
-                    else dt = dtv[1];
+                    // line no 515 to 519 from fortran
+                    // not implemented since it jusst logged the message
 
-                    if(cfl < cflv[0]) cflmax = Math.Max(cfl, cflmax);
+                    // changed as per the claw1 code 
+                    if (method[0] == 1)
+                    {
+                        // # choose new time step if variable time step
+                        if (cfl > 0)
+                        {
+                            dt = Math.Min(dtv[1], (dt * cflv[1] / cfl));
+                            dtmin = Math.Min(dt, dtmin);
+                            dtmax = Math.Max(dt, dtmax);
+                        }
+                        else dt = dtv[1];
+                    }
+
+                    //# check to see if the Courant number was too large:
+
+                    if (cfl < cflv[0])
+                    {
+                        cflmax = Math.Max(cfl, cflmax);
+                    }
                     else
                     {
                         t = told;
                         cp1.Run(ref qwork, ref q);
 
+                        // line no 541 to 545 from fortran
+                        // not implemented since it jusst logged the message
+
                         if (method[0] == 1)
                         {
                             dt = dt / 2;
-                            goto miranda;
+                            goto Label40; // goto the Label 40 same as fortran code
                         }
                         else
                         {
                             cflmax = Math.Max(cfl, cflmax);
+                            break; // breaking loop here (in Fortran its : goto 900 )
                         }
                     }
+                    //# see if we are done:
+                    nv[1] = nv[1] + 1;
+                    if (t > tend) break; // breaking loop here (in Fortran its : goto 900 )
                 }
             }
 
+            // # return information
             if (method[0] == 1 && t < tend && nv[1] == maxn) errorInfo = 11; //too many timesteps
             if (method[0] == 0 && cflmax > cflv[0]) errorInfo = 12; //Courant number too large with fixed dt
             tend = t;

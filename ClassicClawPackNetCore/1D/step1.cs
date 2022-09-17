@@ -96,16 +96,21 @@ namespace ClassicClawPackNetCore._1D
 
             // solve Riemann problem at each interface
             var rpi = new Rp1(ql: q, qr: q, auxl: aux, auxr: aux, mx: mx, maxmx: mx);
-            s = rpi.s;
-            amdq = rpi.amdq;
-            apdq = rpi.apdq;
-            wave = rpi.fwave;
+            //var rp1time = DateTime.Now;
+            var success = rpi.Run();
+            //Console.WriteLine($"RP1 in step1 Execution time : {(DateTime.Now - rp1time).Milliseconds}");
+
+            s = rpi.s.TransposeRowsAndColumns();
+            amdq = rpi.amdq.TransposeRowsAndColumns();
+            apdq = rpi.apdq.TransposeRowsAndColumns();
+            wave = rpi.fwave.TransposeRowsAndColumns();
             // Modify q for Godunov update:
             // Note this may not correspond to a conservative flux-differencing
             // for equations not in conservation form.  It is conservative if
             // amdq + apdq = f(q(i)) - f(q(i-1)).
 
-            for (int i = 0; i < mx + 1; i++)
+            for (int i = 2, index = 1; index < mx + 1; index++, i++) // in c# fortran i = (-1, 0, 1) is equivalent to (0, 1, 2)
+                                                                        // variable "index" will control the loop 
             {
                 // q(:, i - 1) is still in cache from last cycle of i loop, so
                 // update it first
@@ -114,13 +119,12 @@ namespace ClassicClawPackNetCore._1D
                     q[m][i - 1] = q[m][i - 1] - dtdx[i - 1] * amdq[m][i];
                     q[m][i] = q[m][i] - dtdx[i] * apdq[m][i];
                 }
-
-
             }
 
             // compute maximum wave speed:
             cfl = 0.0;
-            for (int i = 1; i <= mx + 1; i++)
+            for (int i = 2, index = 1; index < mx + 1; index++, i++) // in c# fortran i = (-1, 0, 1) is equivalent to (0, 1, 2)
+                                                                     // variable "index" will control the loop 
                 for (int mw = 0; mw < num_waves; mw++)
                     // if s>0 use dtdx(i) to compute CFL,
                     // if s<0 use dtdx(i-1) to compute CFL:
@@ -130,19 +134,22 @@ namespace ClassicClawPackNetCore._1D
 
             // compute correction fluxes for second order q_{xx} terms:/
             // apply limiter to waves:
-            var limiter = new Limiter(maxm: mx, num_eqn, num_waves, num_ghost, mx);
             if (limit)
             {
-                limiter.Run();
-                wave = limiter.wave;
-                s = limiter.s;
-                mthlim = limiter.mthlim;
+                var limiter = new Limiter(maxm: mx, num_eqn, num_waves, num_ghost, mx);
+                // since arrays are always pass by reference set them before we execute run()
+                // also these values required by limiter subroutine from parent. 
+                limiter.wave = wave;
+                limiter.s = s;
+                limiter.mthlim = mthlim;
+                limiter.Run();                
             }
 
 
             if (use_fwave == false)
             {
-                for (int i = 1; i <= mx + 1; i++)
+                for (int i = 2, index = 1; index < mx + 1; index++, i++) // in c# fortran i = (-1, 0, 1) is equivalent to (0, 1, 2)
+                                                                         // variable "index" will control the loop 
                 {
                     for (int m = 0; m < num_eqn; m++)
                         f[m][i] = 0.0;
@@ -154,7 +161,8 @@ namespace ClassicClawPackNetCore._1D
                 }
             }
             else
-                for (int i = 1; i <= mx + 1; i++)
+                for (int i = 2, index = 1; index < mx + 1; index++, i++) // in c# fortran i = (-1, 0, 1) is equivalent to (0, 1, 2)
+                                                                         // variable "index" will control the loop 
                 {
                     for (int m = 0; m < num_eqn; m++)
                         f[m][i] = 0.0;
@@ -168,7 +176,8 @@ namespace ClassicClawPackNetCore._1D
             // update q by differencing correction fluxes
             // (Note:  Godunov update has already been performed above)
 
-            for (int i = 1; i <= mx + 1; i++)
+            for (int i = 2, index = 1; index < mx + 1; index++, i++) // in c# fortran i = (-1, 0, 1) is equivalent to (0, 1, 2)
+                                                                     // variable "index" will control the loop 
                 for (int m = 0; m < num_eqn; m++)
                     q[m][i] = q[m][i] - dtdx[i] * (f[m][i + 1] - f[m][i]);
         }

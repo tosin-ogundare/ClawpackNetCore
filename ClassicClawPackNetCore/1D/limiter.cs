@@ -6,7 +6,7 @@
     public class Limiter
     {
 
-        public Limiter(int maxm, int num_eqn, int num_waves, int num_ghost, int mx)
+        public Limiter(int maxm,int num_eqn, int num_waves, int num_ghost, int mx)
         {
             this.mx = mx;
             this.num_waves = num_waves;
@@ -16,7 +16,7 @@
             mthlim = new int[num_waves];
             dotr = new double[num_waves];
             for (int i = 0; i < wave.Length; i++) wave[i] = new double[num_waves][];
-            for (int i = 0; i < wave.Length; i++) for (int j = 0; j < wave[i].Length; i++) wave[i][j] = new double[maxm + 2 * num_ghost];
+            for (int i = 0; i < wave.Length; i++) for (int j = 0; j < wave[i].Length; j++) wave[i][j] = new double[maxm+2*num_ghost];
         }
 
         int mx, num_waves, num_eqn;
@@ -45,12 +45,15 @@
         public void Run()
         {
             SetAll(dotr, 0.0);
-            for (int i = 0; i <= mx + 1; i++)
+            for (int i = 1, index = 0; index <= mx + 1; index++, i++) // since index start from 0 in c# instead of -1
+                                                                      // wave[][][0] in Fortran == wave[][][1] in C#
             {
-            Waveloop:
-                for (int mw = 0; i < num_waves; num_waves++)
-                {
-                    if (mthlim[mw] == 0) goto Waveloop;
+                for (int mw = 0; mw < num_waves; mw++) // mistake corrected by changing i to mw
+                {     
+                    if (mthlim[mw] == 0) continue; // In Fortran : The cycle statement causes the loop to skip the remainder of its body,
+                                                   // and immediately retest its condition prior to reiterating.
+                                                   // where as in C# the same work will be done by "Continue" statement
+                                                   // https://www.tutorialspoint.com/fortran/fortran_cycle.htm
 
                     // Construct dot products
                     wnorm2 = 0.0;
@@ -63,14 +66,14 @@
 
                     }
 
-                    // Skip this loop if it's on the boundary or the size of the wave is
-                    // zero(but still want dot products to be initialized above)
-                    if (i == 0) goto Waveloop;
-                    if (wnorm2 == 0.0) goto Waveloop;
+                     // Skip this loop if it's on the boundary or the size of the wave is
+                     // zero(but still want dot products to be initialized above)
+                    if (index == 0) continue;
+                    if (wnorm2 == 0.0) continue;
 
 
-                    // Compute ratio of this wave's strength to upwind wave's strength
-                    if (s[mw][i] > 0.0) wlimiter = Philim.Run(wnorm2, dotl, mthlim[mw]);
+                    // Compute ratio of this wave's strength to upwind wave's strength 
+                    if (s[mw][i] > 0.0) wlimiter = Philim.Run(wnorm2, dotl, mthlim[mw]);// s[][0] in Fortran == s[][1] in C#
                     else
                         wlimiter = Philim.Run(wnorm2, dotr[mw], mthlim[mw]);
 

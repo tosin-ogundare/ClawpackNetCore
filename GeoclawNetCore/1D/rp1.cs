@@ -485,7 +485,22 @@ namespace GeoclawNetCore._1D
             //Call LAPACK eigen solver
             dgeev.Run("N", "V", 4, ref A_flattened, 0, 4, ref real_evalues, 0, ref imag_evalues, 0, ref empty, 0, 1, ref eig_vec_flattened, 0, 4, ref work, 0, lwork, ref info);
 
-            info = (info < 0) ? -info : info;
+            if (info < 0)
+            {
+                info = -info;
+                string errString = @$"The {info}th argument had an illegal value.";
+                Console.WriteLine(errString);
+                throw new Exception(errString);
+            }
+            else if (info > 0)
+            {
+                string errString = @$"The QR algorithm failed to compute all the eigenvalues, " +
+                    $"and no eigenvectors have been computed; elements {info} +1:4 of WR and WI contain " +
+                    $"eigenvalues which have converged.";
+                Console.WriteLine(errString);
+                throw new Exception(errString);
+            }
+
             for (int i = 0; i < mwaves; i++) eig_vec[i] = eig_vec_flattened.Skip(4 * i).Take(4).ToArray();
             return (real_evalues, eig_vec);
         }

@@ -8,6 +8,33 @@ namespace GeoclawNetCore._1D
 {
     public static class JaggedArrayExtension
     {
+        public static string WriteLine<T>(this T[][] arr)
+        {
+            int rowCount = arr.Length;
+            int columnCount = arr[0].Length;
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < rowCount; i++)
+            {
+                for (int j = 0; j < columnCount; j++)
+                {
+                    sb.Append($" {arr[i][j]} ");
+                }
+                sb.AppendLine();
+            }
+            return sb.ToString();
+        }
+
+        public static string WriteLine<T>(this T[] arr)
+        {
+            int rowCount = arr.Length;
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < rowCount; i++)
+            {
+                sb.Append($" {arr[i]} ");
+            }
+            return sb.ToString();
+        }
+
         public static T[][] TransposeRowsAndColumns<T>(this T[][] arr)
         {
             int rowCount = arr.Length;
@@ -48,7 +75,7 @@ namespace GeoclawNetCore._1D
         /// <param name="arr"></param>
         /// <returns></returns>
         public static T[][][] TransposeRowsAndColumns<T>(this T[][][] arr)
-        {            
+        {
             T[][][] newArray;
 
             int mx = arr.Length;

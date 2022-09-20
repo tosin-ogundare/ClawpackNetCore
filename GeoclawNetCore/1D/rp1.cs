@@ -1,4 +1,5 @@
 ﻿using DotNumerics.LinearAlgebra.CSLapack;
+using System.Text;
 using static GeoclawNetCore._1D.Setprob;
 
 namespace GeoclawNetCore._1D
@@ -331,14 +332,16 @@ namespace GeoclawNetCore._1D
                 dgesv.Run(4, 1, ref A_flattened, 0, 4, ref ipiv, 0, ref delta, 0, 4, ref info);
                 if (!(info == 0))
                 {
-                    //Console.WriteLine($"Location [i] = [{i}]");
-                    //Console.WriteLine($"Dry states, L= {dry_state_l[1]} R={dry_state_r[1]}");// index in c# starts from 0
-                    //Console.WriteLine($"h_l[1] = {h_l[1]} h_r[1] = {h_r[1]}");// index in c# starts from 0
-                    //Console.WriteLine($"Error solving R beta = delta, {info}");
-                    //Console.WriteLine($"Eigen-speeds:{s[i][0]}, {mwaves}");
-                    //Console.WriteLine($"Eigen-vectors:");
-                    //for (int j = 0; j < 4; j++)
-                    //    Console.WriteLine($"[4d16.8] {eig_vec[j][0]}, {meqn}");
+                    StringBuilder err = new StringBuilder();
+                    err.AppendLine($"Location [i] = [{i}]");
+                    err.AppendLine($"Dry states, L= {dry_state_l[1]} R={dry_state_r[1]}");
+                    err.AppendLine($"h_l[1] = {h_l[1]} h_r[1] = {h_r[1]}");
+                    err.AppendLine($"Error solving R beta = delta, {info}");
+                    err.AppendLine($"Eigen-speeds:{s[i].WriteLine()}");
+                    err.AppendLine($"Eigen-vectors:{eig_vec.WriteLine()}");
+                    string str = err.ToString();
+                    Console.WriteLine(str);
+                    throw new Exception(str);
                 }
                 beta = delta;
 

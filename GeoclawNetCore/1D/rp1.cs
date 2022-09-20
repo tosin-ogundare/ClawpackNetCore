@@ -210,6 +210,7 @@ namespace GeoclawNetCore._1D
                         for (int mw = 0; mw < mwaves; mw++)
                             fwave[i][k][mw] = eig_vec[k][mw] * beta[mw];
 
+                    continue; // cycle statement in Fortran Legacy Clawpack library of RP1 
                 }
 
                 //Calculate eigen - space values

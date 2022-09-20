@@ -465,7 +465,7 @@ namespace GeoclawNetCore._1D
             double g = Setprob.g;
             double[] empty = new double[mwaves * mwaves], work = new double[mwaves * mwaves];
             int info = default;
-            int lwork = default;
+            int lwork = work.Length;
 
             //for (int i = 0; i < eig_vec.Length; i++) eig_vec[i] = new double[mwaves];
             //for (int i = 0; i < A.Length; i++) A[i] = new double[mwaves];

@@ -359,10 +359,16 @@ namespace GeoclawNetCore._1D
                                                   // I found upper limit for i is "mx+mbc" which is same as upperbound1
             {
                 // Calculate amdq and apdq
-                for (int k = 0; k < meqn; k++)
-                    for (int mw = 0; mw < mwaves; mw++)
-                        if (s[i][k] > 0.0) apdq[i][k] += fwave[i][k][mw];
-                        else amdq[i][k] += fwave[i][k][mw];
+                for (int mw = 0; mw < mwaves; mw++)
+                {
+                    for (int k = 0; k < meqn; k++)
+                    {
+                        if (s[i][mw] > 0.0)
+                            apdq[i][k] += fwave[i][k][mw];
+                        else
+                            amdq[i][k] += fwave[i][k][mw];
+                    }
+                }
             }
             //Console.WriteLine($"RP1 second loop : {(DateTime.Now - sttime).Milliseconds}");
             return 0;

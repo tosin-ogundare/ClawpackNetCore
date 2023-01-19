@@ -109,7 +109,7 @@ namespace ClassicClawPackNetCore._1D
             // for equations not in conservation form.  It is conservative if
             // amdq + apdq = f(q(i)) - f(q(i-1)).
 
-            for (int i = 2, index = 1; index < mx + 1; index++, i++) // in c# fortran i = (-1, 0, 1) is equivalent to (0, 1, 2)
+            for (int i = 2, index = 1; index <= mx + 1; index++, i++) // in c# fortran i = (-1, 0, 1) is equivalent to (0, 1, 2)
                                                                         // variable "index" will control the loop 
             {
                 // q(:, i - 1) is still in cache from last cycle of i loop, so
@@ -123,7 +123,7 @@ namespace ClassicClawPackNetCore._1D
 
             // compute maximum wave speed:
             cfl = 0.0;
-            for (int i = 2, index = 1; index < mx + 1; index++, i++) // in c# fortran i = (-1, 0, 1) is equivalent to (0, 1, 2)
+            for (int i = 2, index = 1; index <= mx + 1; index++, i++) // in c# fortran i = (-1, 0, 1) is equivalent to (0, 1, 2)
                                                                      // variable "index" will control the loop 
                 for (int mw = 0; mw < num_waves; mw++)
                     // if s>0 use dtdx(i) to compute CFL,
@@ -148,7 +148,7 @@ namespace ClassicClawPackNetCore._1D
 
             if (use_fwave == false)
             {
-                for (int i = 2, index = 1; index < mx + 1; index++, i++) // in c# fortran i = (-1, 0, 1) is equivalent to (0, 1, 2)
+                for (int i = 2, index = 1; index <= mx + 1; index++, i++) // in c# fortran i = (-1, 0, 1) is equivalent to (0, 1, 2)
                                                                          // variable "index" will control the loop 
                 {
                     for (int m = 0; m < num_eqn; m++)
@@ -161,7 +161,7 @@ namespace ClassicClawPackNetCore._1D
                 }
             }
             else
-                for (int i = 2, index = 1; index < mx + 1; index++, i++) // in c# fortran i = (-1, 0, 1) is equivalent to (0, 1, 2)
+                for (int i = 2, index = 1; index <= mx + 1; index++, i++) // in c# fortran i = (-1, 0, 1) is equivalent to (0, 1, 2)
                                                                          // variable "index" will control the loop 
                 {
                     for (int m = 0; m < num_eqn; m++)
@@ -176,7 +176,7 @@ namespace ClassicClawPackNetCore._1D
             // update q by differencing correction fluxes
             // (Note:  Godunov update has already been performed above)
 
-            for (int i = 2, index = 1; index < mx + 1; index++, i++) // in c# fortran i = (-1, 0, 1) is equivalent to (0, 1, 2)
+            for (int i = 2, index = 1; index <= mx + 1; index++, i++) // in c# fortran i = (-1, 0, 1) is equivalent to (0, 1, 2)
                                                                      // variable "index" will control the loop 
                 for (int m = 0; m < num_eqn; m++)
                     q[m][i] = q[m][i] - dtdx[i] * (f[m][i + 1] - f[m][i]);

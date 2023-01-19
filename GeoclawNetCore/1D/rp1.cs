@@ -1,4 +1,5 @@
 ﻿using DotNumerics.LinearAlgebra.CSLapack;
+using System.Text;
 using static GeoclawNetCore._1D.Setprob;
 
 namespace GeoclawNetCore._1D
@@ -109,7 +110,7 @@ namespace GeoclawNetCore._1D
 
         public double b_l, tau, b_r, w_l, w_r, flux_transfer_r, flux_transfer_l, wind_speed;
         public double Run()
-        { 
+        {
             //var sttime = DateTime.Now; 
 
             for (int i = 1; i < upperbound1; i++)
@@ -149,7 +150,7 @@ namespace GeoclawNetCore._1D
                     }
                     else u_r[j] = ql[i][layer_index + 2] / ql[i][layer_index + 1];
                 }
-                
+
                 double[] h_ave = h_l.Select((x, i) => (x + h_r[i]) * 0.5).ToArray();
                 /*
                     b_l = auxr[i - 1][i - 1 + mbc];
@@ -209,6 +210,7 @@ namespace GeoclawNetCore._1D
                         for (int mw = 0; mw < mwaves; mw++)
                             fwave[i][k][mw] = eig_vec[k][mw] * beta[mw];
 
+                    continue; // cycle statement in Fortran Legacy Clawpack library of RP1 
                 }
 
                 //Calculate eigen - space values
@@ -216,46 +218,44 @@ namespace GeoclawNetCore._1D
 
                 if (eigen_method == 1)
                 {
-                    var ret = Linear_Eigen(alpha, h_hat_l, h_hat_r, u_l, u_r, rare);
+                    var ret = Linear_Eigen(alpha, h_hat_l, h_hat_r, u_l, u_r, rare, eig_vec);
                     double[] lambda = ret.Item1;
-                    eig_vec = ret.Item2;
+                    //eig_vec = ret.Item2;
                     s[i] = lambda;
                 }
                 else if (eigen_method == 2)
                 {
-                    var ret = Linear_Eigen(alpha, h_l, h_r, u_l, u_r, rare);
+                    var ret = Linear_Eigen(alpha, h_l, h_r, u_l, u_r, rare, eig_vec);
                     double[] lambda = ret.Item1;
-                    eig_vec = ret.Item2;
+                    //eig_vec = ret.Item2;
                     s[i] = lambda;
                 }
                 else if (eigen_method == 3)
                 {
-                    var ret = Velocity_Eigen(alpha, h_l, h_r, u_l, u_r, rare);
+                    var ret = Velocity_Eigen(alpha, h_l, h_r, u_l, u_r, rare, eig_vec);
                     double[] lambda = ret.Item1;
-                    eig_vec = ret.Item2;
+                    //eig_vec = ret.Item2;
                     s[i] = lambda;
                 }
                 else if (eigen_method == 4)
                 {
                     if (dry_state_r[1] && (!dry_state_l[1]) || dry_state_l[1] && (!dry_state_r[1]))
                     {
-                        var ret = Linear_Eigen(alpha, h_l, h_r, u_l, u_r, rare);
+                        var ret = Linear_Eigen(alpha, h_l, h_r, u_l, u_r, rare, eig_vec);
                         double[] lambda = ret.Item1;
-                        eig_vec = ret.Item2;
+                        //eig_vec = ret.Item2;
                         s[i] = lambda;
                     }
                     else
                     {
-                        var ret = Exact_Eigen(alpha, h_l, h_r, u_l, u_r, rare);
+                        var ret = Exact_Eigen(alpha, h_l, h_r, u_l, u_r, rare, eig_vec);
                         double[] lambda = ret.Item1;
-                        eig_vec = ret.Item2;
+                        //eig_vec = ret.Item2;
                         s[i] = lambda;
                     }
                 }
                 else
                     throw new Exception("Invalid eigensystem method requested, method = (1,4).");
-
-                continue;
 
                 //Calculate flux vector to be projected onto e - space
                 // Right state dry, left wet
@@ -300,13 +300,13 @@ namespace GeoclawNetCore._1D
                 }
 
 
-                for (int j = 0; j < 2; j++) 
+                for (int j = 0; j < 2; j++)
                 {
                     layer_index = 2 * j;
                     flux_r[layer_index] = rho[j] * hu_r[j];
-                    flux_r[layer_index + 1] = rho[j] * Math.Pow(Math.Pow(h_r[j] * u_r[j],2) + 0.50 * g * h_r[j] ,2);
+                    flux_r[layer_index + 1] = rho[j] * Math.Pow(Math.Pow(h_r[j] * u_r[j], 2) + 0.50 * g * h_r[j], 2);
                     flux_l[layer_index] = rho[j] * hu_l[j];
-                    flux_l[layer_index + 1] = rho[j] * Math.Pow(Math.Pow(h_l[j] * u_l[j] ,2) + 0.50 * g * h_l[j] ,2);
+                    flux_l[layer_index + 1] = rho[j] * Math.Pow(Math.Pow(h_l[j] * u_l[j], 2) + 0.50 * g * h_l[j], 2);
 
                 }
 
@@ -331,21 +331,23 @@ namespace GeoclawNetCore._1D
                 double[] A_flattened = A.SelectMany(x => x).ToArray();
                 //var dgesv = new DGESV();
                 dgesv.Run(4, 1, ref A_flattened, 0, 4, ref ipiv, 0, ref delta, 0, 4, ref info);
-                if (!(info == 0)) 
+                if (!(info == 0))
                 {
-                    Console.WriteLine($"Location [i] = [{i}]");
-                    Console.WriteLine($"Dry states, L= {dry_state_l[1]} R={dry_state_r[1]}");// index in c# starts from 0
-                    Console.WriteLine($"h_l[1] = {h_l[1]} h_r[1] = {h_r[1]}");// index in c# starts from 0
-                    Console.WriteLine($"Error solving R beta = delta, {info}");
-                    Console.WriteLine($"Eigen-speeds:{s[i][0]}, {mwaves}");
-                    Console.WriteLine($"Eigen-vectors:");
-                    for (int j = 0; j < 4; j++)
-                        Console.WriteLine($"[4d16.8] {eig_vec[j][0]}, {meqn}");
+                    StringBuilder err = new StringBuilder();
+                    err.AppendLine($"Location [i] = [{i}]");
+                    err.AppendLine($"Dry states, L= {dry_state_l[1]} R={dry_state_r[1]}");
+                    err.AppendLine($"h_l[1] = {h_l[1]} h_r[1] = {h_r[1]}");
+                    err.AppendLine($"Error solving R beta = delta, {info}");
+                    err.AppendLine($"Eigen-speeds:{s[i].WriteLine()}");
+                    err.AppendLine($"Eigen-vectors:{eig_vec.WriteLine()}");
+                    string str = err.ToString();
+                    Console.WriteLine(str);
+                    throw new Exception(str);
                 }
                 beta = delta;
 
                 // Calculate waves
-                 for (int k = 0; k < meqn; k++)
+                for (int k = 0; k < meqn; k++)
                     for (int mw = 0; mw < mwaves; mw++)
                         fwave[i][k][mw] = eig_vec[k][mw] * beta[mw];
 
@@ -353,14 +355,20 @@ namespace GeoclawNetCore._1D
             //Console.WriteLine($"RP1 first loop till Exact_Eigen : {(DateTime.Now - sttime).Milliseconds}");
             //sttime = DateTime.Now;
 
-            for (int i=0; i < upperbound1; i++) // changed to upper bound when compared with the original code
-                                               // I found upper limit for i is "mx+mbc" which is same as upperbound1
+            for (int i = 0; i < upperbound1; i++) // changed to upper bound when compared with the original code
+                                                  // I found upper limit for i is "mx+mbc" which is same as upperbound1
             {
                 // Calculate amdq and apdq
-                for (int k = 0; k < meqn; k++)
-                    for (int mw = 0; mw < mwaves; mw++)
-                        if (s[i][k] > 0.0) apdq[i][k] += fwave[i][k][mw];
-                        else amdq[i][k] += fwave[i][k][mw];
+                for (int mw = 0; mw < mwaves; mw++)
+                {
+                    for (int k = 0; k < meqn; k++)
+                    {
+                        if (s[i][mw] > 0.0)
+                            apdq[i][k] += fwave[i][k][mw];
+                        else
+                            amdq[i][k] += fwave[i][k][mw];
+                    }
+                }
             }
             //Console.WriteLine($"RP1 second loop : {(DateTime.Now - sttime).Milliseconds}");
             return 0;
@@ -389,17 +397,17 @@ namespace GeoclawNetCore._1D
             return (s, eig_vec);
         }
 
-        internal (double[], double[][]) Linear_Eigen(double[] alpha, double[] h_l, double[] h_r, double[] u_l, double[] u_r, int rare, int mwaves = 4)
+        internal (double[], double[][]) Linear_Eigen(double[] alpha, double[] h_l, double[] h_r, double[] u_l, double[] u_r, int rare, double[][] eig_vec, int mwaves = 4)
         {
 
             double[] s = new double[mwaves];
-            double[][] eig_vec = new double[mwaves][];
+            //double[][] eig_vec = new double[mwaves][];
             double r = Setprob.r;
             double g = Setprob.g;
 
-            for (int i = 0; i < eig_vec.Length; i++) eig_vec[i] = new double[mwaves];
+            //for (int i = 0; i < eig_vec.Length; i++) eig_vec[i] = new double[mwaves];
 
-            
+
             double gamma_l, gamma_r;
 
             if (rare == 1)
@@ -426,7 +434,7 @@ namespace GeoclawNetCore._1D
 
             }
             else if (rare == 2) return default;
-            else 
+            else
             {
                 gamma_l = h_l[1] / h_l[0];
                 gamma_r = h_r[1] / h_r[0];
@@ -451,20 +459,20 @@ namespace GeoclawNetCore._1D
             return (s, eig_vec);
         }
 
-        internal (double[], double[][]) Exact_Eigen(double[] alpha, double[] h_l, double[] h_r, double[] u_l, double[] u_r, int rare, int mwaves = 4)
+        internal (double[], double[][]) Exact_Eigen(double[] alpha, double[] h_l, double[] h_r, double[] u_l, double[] u_r, int rare, double[][] eig_vec, int mwaves = 4)
         {
             double[] s = new double[mwaves];
             double[] real_evalues = new double[mwaves];
             double[] imag_evalues = new double[mwaves];
             //double[] h_ave = new double[2];
             //double[] u_ave = new double[2];
-            double[][] eig_vec = new double[mwaves][];
+            //double[][] eig_vec = new double[mwaves][];            
             double[][] A = new double[mwaves][];
             double r = Setprob.r;
             double g = Setprob.g;
             double[] empty = new double[mwaves * mwaves], work = new double[mwaves * mwaves];
             int info = default;
-            int lwork = default;
+            int lwork = work.Length;
 
             //for (int i = 0; i < eig_vec.Length; i++) eig_vec[i] = new double[mwaves];
             //for (int i = 0; i < A.Length; i++) A[i] = new double[mwaves];
@@ -474,32 +482,47 @@ namespace GeoclawNetCore._1D
             double[] u_ave = u_l.Select((x, i) => (x + u_r[i]) * 0.5).ToArray();
 
             A[0] = new double[] { 0.0, 1.0, 0.0, 0.0 };
-            A[1] = new double[] { -Math.Pow(u_ave[0],2) + g * h_ave[0], 2.0 * u_ave[0], g * h_ave[0], 0.0 };
-            A[2] = new double[] { 0.0, 0.0, 0.0, 1.0};
+            A[1] = new double[] { -Math.Pow(u_ave[0], 2) + g * h_ave[0], 2.0 * u_ave[0], g * h_ave[0], 0.0 };
+            A[2] = new double[] { 0.0, 0.0, 0.0, 1.0 };
             A[3] = new double[] { g * r * h_ave[1], 0.0, -Math.Pow(u_ave[1], 2) + g * h_ave[1], 2.0 * u_ave[1] };
             double[] A_flattened = A.SelectMany(x => x).ToArray();
-            double[] eig_vec_flattened = new double[mwaves * mwaves];//eig_vec.SelectMany(x => x).ToArray();
+            double[] eig_vec_flattened = eig_vec.SelectMany(x => x).ToArray();
 
             //var dgeev = new DGEEV();
             //Call LAPACK eigen solver
             dgeev.Run("N", "V", 4, ref A_flattened, 0, 4, ref real_evalues, 0, ref imag_evalues, 0, ref empty, 0, 1, ref eig_vec_flattened, 0, 4, ref work, 0, lwork, ref info);
 
-            info = (info < 0) ? -info : info;
+            if (info < 0)
+            {
+                info = -info;
+                string errString = @$"The {info}th argument had an illegal value.";
+                Console.WriteLine(errString);
+                throw new Exception(errString);
+            }
+            else if (info > 0)
+            {
+                string errString = @$"The QR algorithm failed to compute all the eigenvalues, " +
+                    $"and no eigenvectors have been computed; elements {info} +1:4 of WR and WI contain " +
+                    $"eigenvalues which have converged.";
+                Console.WriteLine(errString);
+                throw new Exception(errString);
+            }
+
             for (int i = 0; i < mwaves; i++) eig_vec[i] = eig_vec_flattened.Skip(4 * i).Take(4).ToArray();
             return (real_evalues, eig_vec);
         }
 
-        internal (double[], double[][]) Velocity_Eigen(double[] alpha, double[] h_l, double[] h_r, double[] u_l, double[] u_r, int rare, int mwaves = 4)
+        internal (double[], double[][]) Velocity_Eigen(double[] alpha, double[] h_l, double[] h_r, double[] u_l, double[] u_r, int rare, double[][] eig_vec, int mwaves = 4)
         {
             double[] s = new double[mwaves];
-            double[][] eig_vec = new double[mwaves][];
+            //double[][] eig_vec = new double[mwaves][];
             double r = Setprob.r;
             double g = Setprob.g;
             double one_minus_r = Setprob.one_minus_r;
-            for (int i = 0; i < eig_vec.Length; i++) eig_vec[i] = new double[mwaves];
+            //for (int i = 0; i < eig_vec.Length; i++) eig_vec[i] = new double[mwaves];
 
             double total_depth_l, total_depth_r, mult_depth_l = 1, mult_depth_r = 1;
-            
+
             total_depth_l = h_l.Sum();
             total_depth_r = h_r.Sum();
             foreach (double item in h_l) mult_depth_l *= item;
